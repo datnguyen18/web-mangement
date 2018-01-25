@@ -10,26 +10,30 @@ class ManageItems extends Component {
             isSoftDrink: false,
             category: "",
             inputIngredient: ['input'],
-            ingredients:[]
+            ingredientNames: [],
+            ingredient: [{ name: '', quantity: '' }]
         }
         this.itemRef = firebaseApp.database().ref("Warehouse");
     }
 
     componentWillMount() {
-        let array= []
+        let array = []
         this.itemRef
-        .child("Ingredients")
-        .once("value", snapshot => {
-            snapshot.forEach(e => {
-                array.push({name: e.key})
+            .child("Ingredients")
+            .once("value", snapshot => {
+                snapshot.forEach(e => {
+                    array.push({name: e.key})
+                })
+                this.setState({
+                    ingredientNames: array
+                })
             })
-            this.setState({
-                ingredients: array
-            })
-        })
     }
 
     handleSelect = (event) => {
+        this.setState({
+            inputIngredient: ['input']
+        })
         if (event.target.value === "SoftDrink") {
             this.setState({
                 isSoftDrink: true
@@ -40,32 +44,45 @@ class ManageItems extends Component {
             })
         }
     }
-    addInput= () => {
+    addInput = () => {
         this.setState({
-            inputIngredient: this.state.inputIngredient.concat(['a'])
+            inputIngredient: this.state.inputIngredient.concat(['a']),
+            ingredient: this.state.ingredient.concat([{name:'', quantity:''}])
         })
     }
+    handleChangeSelect = (e, index) => {
+        this.state.ingredient[index].name = e.target.value
+    }
+
+    handleChangeInput = (e, index) => {
+        this.state.ingredient[index].quantity = e.target.value
+    }
     render() {
-        console.log(this.state.ingredients)
+        console.log(this.state.ingredient)
         let ingredients = null
         if (!this.state.isSoftDrink) {
+           
             ingredients = (
                 <div className="form-group row">
                     <label for="inputPassword" class="col-sm-2 col-form-label">Add Ingredient</label>
                     <div className="col-sm-10">
-                        {this.state.inputIngredient.map(input => {
-                            return(
+                        {this.state.inputIngredient.map((input, index) => {
+                            return (
                                 <div className="form-row">
-                                <div className="col-sm-6">
-                                    <input placeholder="" id type="text" class="form-control" />
-                                </div>
+                                    <div className="col-sm-6">
+                                        <select className="form-control" onChange={(e) => this.handleChangeSelect(e, index)}>
+                                            {this.state.ingredientNames.map((e, i) => {
+                                               return <option value={e.name}>{e.name}</option>
+                                            })}
+                                        </select>
+                                    </div>
 
-                                <div className="col-sm-6">
-                                    <input type="text" class="form-control" />
+                                    <div className="col-sm-6">
+                                        <input onChange={(e) => this.handleChangeInput(e,index)} type="text" class="form-control" />
+                                    </div>
                                 </div>
-                            </div>
                             )
-                           
+
                         })}
                     </div>
                     <button onClick={this.addInput}
@@ -108,7 +125,7 @@ class ManageItems extends Component {
                         </select>
                     </div>
                     {ingredients}
-                    <button 
+                    <button
                         style={{ marginTop: 10 }}
                         type="button"
                         class="btn btn-danger">
