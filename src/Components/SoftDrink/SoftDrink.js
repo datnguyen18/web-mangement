@@ -13,7 +13,7 @@ class SoftDrink extends Component {
     }
 
     addSoftDrink = () => {
-        if (this.state.name == "" || this.state.quantity == "") {
+        if (this.state.name === "" || this.state.quantity === "") {
             alert("Please input name & quantity!!")
         } else {
             this.itemRef.child("SoftDrink")
@@ -26,7 +26,7 @@ class SoftDrink extends Component {
     }
     addQuantity = () => {
 
-        if (this.state.name == "" || this.state.quantity == "") {
+        if (this.state.name === "" || this.state.quantity === "") {
             alert("Please input name & quantity!!")
         } else {
             this.itemRef.child("SoftDrink").once("value", snapshot1 => {

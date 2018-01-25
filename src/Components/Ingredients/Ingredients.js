@@ -13,7 +13,7 @@ class Ingredients extends Component {
     }
 
     addIngredient = () => {
-        if (this.state.name == "" || this.state.quantity == "") {
+        if (this.state.name === "" || this.state.quantity === "") {
             alert("Please input name & quantity!!")
         } else {
             this.itemRef.child("Ingredients")
@@ -25,7 +25,7 @@ class Ingredients extends Component {
 
     }
     addQuantity = () => {
-        if (this.state.name == "" || this.state.quantity == "") {
+        if (this.state.name === "" || this.state.quantity === "") {
             alert("Please input name & quantity!!")
         } else {
             this.itemRef.child("Ingredients")

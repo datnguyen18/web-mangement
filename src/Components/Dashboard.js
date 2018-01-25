@@ -5,7 +5,7 @@ import {
     Link
   } from 'react-router-dom'
   
-import { firebaseApp } from "../config/Firebase";
+
 import Income from './Income';
 import ManageItems from './ManageItems/ManageItems';
 import Ingredients from './Ingredients/Ingredients';
