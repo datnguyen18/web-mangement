@@ -69,7 +69,7 @@ class ManageItems extends Component {
     handleUploadSuccess =(filename) => {
         firebaseApp
         .storage()
-        .ref('img').child(filename).getDownloadURL().then(url => this.setState({avatarURL: url}));
+        .ref('img').child(filename).getDownloadURL().then(url => this.setState({imageUrl: url}));
     }
 
     handleUploadDrink = () => {
