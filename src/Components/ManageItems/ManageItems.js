@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
-import Select from 'react-select';
-import 'react-select/dist/react-select.css';
+
 import { firebaseApp } from '../../config/Firebase';
+import FileUploader from 'react-firebase-file-uploader';
 
 class ManageItems extends Component {
     constructor(props) {
         super(props)
         this.state = {
+            name:'',
+            price:'',
+            imageUrl:'',
             isSoftDrink: false,
             category: "",
             inputIngredient: ['input'],
@@ -14,6 +17,7 @@ class ManageItems extends Component {
             ingredient: [{ name: '', quantity: '' }]
         }
         this.itemRef = firebaseApp.database().ref("Warehouse");
+        this.itemRefDrink = firebaseApp.database().ref("Drink");
     }
 
     componentWillMount() {
@@ -22,7 +26,7 @@ class ManageItems extends Component {
             .child("Ingredients")
             .once("value", snapshot => {
                 snapshot.forEach(e => {
-                    array.push({name: e.key})
+                    array.push({ name: e.key })
                 })
                 this.setState({
                     ingredientNames: array
@@ -40,14 +44,15 @@ class ManageItems extends Component {
             })
         } else {
             this.setState({
-                isSoftDrink: false
+                isSoftDrink: false,
+                category: event.target.value
             })
         }
     }
     addInput = () => {
         this.setState({
             inputIngredient: this.state.inputIngredient.concat(['a']),
-            ingredient: this.state.ingredient.concat([{name:'', quantity:''}])
+            ingredient: this.state.ingredient.concat([{ name: '', quantity: '' }])
         })
     }
     handleChangeSelect = (e, index) => {
@@ -57,11 +62,35 @@ class ManageItems extends Component {
     handleChangeInput = (e, index) => {
         this.state.ingredient[index].quantity = e.target.value
     }
+    handleUploadError= (error) => {
+        alert(error)
+    }
+
+    handleUploadSuccess =(filename) => {
+        firebaseApp
+        .storage()
+        .ref('img').child(filename).getDownloadURL().then(url => this.setState({avatarURL: url}));
+    }
+
+    handleUploadDrink = () => {
+        let array = []
+        this.state.ingredient.forEach(e => {
+            array.push({[e.name]:e.quantity})
+        })
+        this.itemRefDrink
+       .child(this.state.name)
+       .set({
+           price: this.state.price,
+           category: this.state.category,
+           imageUrl: this.state.imageUrl,
+           ingredient: array
+       })
+    }
     render() {
-        console.log(this.state.ingredient)
+        console.log(this.state.imageUrl)
         let ingredients = null
         if (!this.state.isSoftDrink) {
-           
+
             ingredients = (
                 <div className="form-group row">
                     <label for="inputPassword" class="col-sm-2 col-form-label">Add Ingredient</label>
@@ -71,14 +100,15 @@ class ManageItems extends Component {
                                 <div className="form-row">
                                     <div className="col-sm-6">
                                         <select className="form-control" onChange={(e) => this.handleChangeSelect(e, index)}>
+                                            <option value='select' selected>Select</option>
                                             {this.state.ingredientNames.map((e, i) => {
-                                               return <option value={e.name}>{e.name}</option>
+                                                return <option value={e.name}>{e.name}</option>
                                             })}
                                         </select>
                                     </div>
 
                                     <div className="col-sm-6">
-                                        <input onChange={(e) => this.handleChangeInput(e,index)} type="text" class="form-control" />
+                                        <input onChange={(e) => this.handleChangeInput(e, index)} type="text" class="form-control" />
                                     </div>
                                 </div>
                             )
@@ -100,19 +130,26 @@ class ManageItems extends Component {
                     <div class="form-group row">
                         <label for="staticEmail" class="col-sm-2 col-form-label">Name</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" />
+                            <input onChange={e => {this.setState({name:e.target.value})}} type="text" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="inputPassword" class="col-sm-2 col-form-label">Price</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" />
+                            <input onChange={e => {this.setState({price:e.target.value})}} type="text" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="inputPassword" class="col-sm-2 col-form-label">Image</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" />
+                            <FileUploader
+                                accept="image/*"
+                                name="avatar"
+                                randomizeFilename
+                                storageRef={firebaseApp.storage().ref('img')}
+                                onUploadError={this.handleUploadError}
+                                onUploadSuccess={this.handleUploadSuccess}
+                            />
                         </div>
                     </div>
                     <div class="form-group row">
@@ -128,7 +165,8 @@ class ManageItems extends Component {
                     <button
                         style={{ marginTop: 10 }}
                         type="button"
-                        class="btn btn-danger">
+                        class="btn btn-danger"
+                        onClick={this.handleUploadDrink}>
                         Add Drink
                     </button>
                 </form>
