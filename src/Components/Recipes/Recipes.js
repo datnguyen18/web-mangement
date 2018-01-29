@@ -16,7 +16,8 @@ class ManageItems extends Component {
       category: "",
       inputIngredient: ["input"],
       ingredientNames: [],
-      ingredient: [{ name: "", quantity: "" }]
+      ingredient: [{ name: "", quantity: "" }],
+      recipe: []
     };
     this.itemRef = firebaseApp.database().ref("Warehouse");
     this.itemRefDrink = firebaseApp.database().ref("Drink");
@@ -32,6 +33,37 @@ class ManageItems extends Component {
         ingredientNames: array
       });
     });
+    let array2 = []
+    let array3 = []
+
+    this.itemRefDrink
+      .on("child_added", snapshot => {
+        if (snapshot.val().category != 'SoftDrink') {
+          array2 = []
+          array3 = []
+          for (var i in snapshot.val().ingredient) {
+            var listIngre = snapshot.val().ingredient[i]
+            for (var j in listIngre) {
+              // console.log(listIngre[j])
+              array2.push({
+                name: j,
+                quantity: listIngre[j]
+              })
+            }
+
+          }
+          array3.push({
+            name: snapshot.key,
+            ingredients: array2
+          })
+          this.setState({
+            recipe: this.state.recipe.concat(array3)
+          })
+        }
+
+      })
+
+
   }
 
   handleSelect = event => {
@@ -81,7 +113,7 @@ class ManageItems extends Component {
         .ref("img")
         .child(file.name)
         .put(file)
-        .then(async function(result) {
+        .then(async function (result) {
           await firebaseApp
             .storage()
             .ref("img")
@@ -108,9 +140,10 @@ class ManageItems extends Component {
     this.state.fileImage = selectorFiles[0];
   }
   render() {
-    console.log(this.state.imageUrl);
+    console.log(this.state.recipe);
     let ingredients = null;
     if (!this.state.isSoftDrink) {
+      
       ingredients = (
         <div className="form-group row">
           <label for="inputPassword" class="col-sm-2 col-form-label">
@@ -153,70 +186,104 @@ class ManageItems extends Component {
         </div>
       );
     }
+
     return (
-      <div className="container col-sm-6">
-        <form>
-          <div class="form-group row">
-            <label for="staticEmail" class="col-sm-2 col-form-label">
-              Name
+      <div className="container">
+        <div className="container col-sm-6">
+          <form>
+            <div class="form-group row">
+              <label for="staticEmail" class="col-sm-2 col-form-label">
+                Name
             </label>
-            <div class="col-sm-10">
-              <input
-                onChange={e => {
-                  this.setState({ name: e.target.value });
-                }}
-                type="text"
-                class="form-control"
-              />
-            </div>
-          </div>
-          <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">
-              Price
-            </label>
-            <div class="col-sm-10">
-              <input
-                onChange={e => {
-                  this.setState({ price: e.target.value });
-                }}
-                type="text"
-                class="form-control"
-              />
-            </div>
-          </div>
-          <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">
-              Image
-            </label>
-            <div class="col-sm-10">
-              <div>
+              <div class="col-sm-10">
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => this.handleChange(e.target.files)}
+                  onChange={e => {
+                    this.setState({ name: e.target.value });
+                  }}
+                  type="text"
+                  class="form-control"
                 />
               </div>
             </div>
-          </div>
-          <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">
-              Category
+            <div class="form-group row">
+              <label for="inputPassword" class="col-sm-2 col-form-label">
+                Price
             </label>
-            <select style={{ marginLeft: 15 }} onChange={this.handleSelect}>
-              <option value="Coffee">Coffee</option>
-              <option value="Itanlian Soda">Italian Soda</option>
-              <option value="Smoothies">Smoothies</option>
-              <option value="SoftDrink">Soft Drink</option>
-            </select>
-          </div>
-          {ingredients}
-          <div class="button-add col-sm-12 text-center">
-            <Button color="primary" onClick={this.handleUploadDrink}>
-              Add Drink
+              <div class="col-sm-10">
+                <input
+                  onChange={e => {
+                    this.setState({ price: e.target.value });
+                  }}
+                  type="text"
+                  class="form-control"
+                />
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="inputPassword" class="col-sm-2 col-form-label">
+                Image
+            </label>
+              <div class="col-sm-10">
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => this.handleChange(e.target.files)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="inputPassword" class="col-sm-2 col-form-label">
+                Category
+            </label>
+              <select style={{ marginLeft: 15 }} onChange={this.handleSelect}>
+                <option value="Coffee">Coffee</option>
+                <option value="Itanlian Soda">Italian Soda</option>
+                <option value="Smoothies">Smoothies</option>
+                <option value="SoftDrink">Soft Drink</option>
+              </select>
+            </div>
+            {ingredients}
+            <div class="button-add col-sm-12 text-center">
+              <Button color="primary" onClick={this.handleUploadDrink}>
+                Add Drink
             </Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
+        <table className="table">
+          <thead >
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Name</th>
+              <th scope="col">Recipe</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.recipe.map((item, index) => {
+              return (
+                <tr>
+                  <th scope="row">{index + 1}</th>
+                  <td>{item.name}</td>
+                  <td>
+                    {item.ingredients.map(item => {
+                      return (
+                        <p>{item.name}: {item.quantity} </p>
+                      )
+                    })}
+                  </td>
+                  <td>
+                    
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
+
     );
   }
 }
