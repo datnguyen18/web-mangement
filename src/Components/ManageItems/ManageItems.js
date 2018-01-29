@@ -72,27 +72,33 @@ class ManageItems extends Component {
       .getDownloadURL()
       .then(url => this.setState({ imageUrl: url }));
   };
-uploadFile =  (file) => {
-    var that = this;
-    firebaseApp.storage().ref("img").child(file.name).put(file).then(function(result){
-        firebaseApp
-        .storage()
-        .ref("img")
-        .child(file.name)
-        .getDownloadURL()
-        .then(url => that.setState({ imageUrl: url }));
+  uploadFile = async (file) => {
+    return new Promise((resolve, reject) => {
+      firebaseApp
+      .storage()
+      .ref("img")
+      .child(file.name)
+      .put(file)
+      .then(async function(result) {
+        await firebaseApp
+          .storage()
+          .ref("img")
+          .child(file.name)
+          .getDownloadURL()
+          .then(url => resolve(url));
+      });
     });
-  };
-  handleUploadDrink = () => {
+  }
+  handleUploadDrink = async () => {
     let array = [];
-    this.uploadFile(this.state.fileImage);
+    var imgUrl = await this.uploadFile(this.state.fileImage);
     this.state.ingredient.forEach(e => {
       array.push({ [e.name]: e.quantity });
     });
     this.itemRefDrink.child(this.state.name).set({
       price: this.state.price,
       category: this.state.category,
-      imageUrl: this.state.imageUrl,
+      imageUrl: imgUrl,
       ingredient: array
     });
   };
@@ -190,7 +196,7 @@ uploadFile =  (file) => {
                   accept="image/*"
                   onChange={e => this.handleChange(e.target.files)}
                 />
-              </div>;
+              </div>
             </div>
           </div>
           <div class="form-group row">
@@ -217,7 +223,6 @@ uploadFile =  (file) => {
       </div>
     );
   }
-
 }
 
 export default ManageItems;
