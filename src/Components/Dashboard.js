@@ -10,6 +10,7 @@ import Income from './Income';
 import ManageItems from './ManageItems/ManageItems';
 import Ingredients from './Ingredients/Ingredients';
 import SoftDrink from './SoftDrink/SoftDrink';
+import Recipes from './Recipes/Recipes';
 
 
 class Dashboard extends Component {
@@ -34,6 +35,9 @@ class Dashboard extends Component {
                             <li class="nav-item">
                                 <Link to="/softdrink" class="nav-link" >Soft Drink</Link>
                             </li>
+                            <li class="nav-item">
+                                <Link to="/recipes" class="nav-link">Recipes</Link>
+                            </li>
                         </ul>
                     </div>           
                 </nav>
@@ -41,6 +45,7 @@ class Dashboard extends Component {
                 <Route path="/income" component={Income}/>
                 <Route path="/ingredients" component={Ingredients}/>
                 <Route path="/softdrink" component={SoftDrink}/>
+                <Route path="/recipes" component={Recipes}/>
                 </div>
             </Router>
         );
