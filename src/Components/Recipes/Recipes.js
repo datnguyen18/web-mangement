@@ -4,8 +4,9 @@ import { firebaseApp } from "../../config/Firebase";
 import FileUploader from "react-firebase-file-uploader";
 import { Row, Col, Card, CardHeader, CardBlock, Button } from "reactstrap";
 import "./Recipes.css";
+import { forEach } from "@firebase/util";
 
-class ManageItems extends Component {
+class Recipes extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -20,7 +21,7 @@ class ManageItems extends Component {
       recipe: []
     };
     this.itemRef = firebaseApp.database().ref("Warehouse");
-    this.itemRefDrink = firebaseApp.database().ref("Drink");
+    this.itemRefRecipes = firebaseApp.database().ref("Recipes");
   }
 
   componentWillMount() {
@@ -33,37 +34,57 @@ class ManageItems extends Component {
         ingredientNames: array
       });
     });
-    let array2 = []
-    let array3 = []
+    let array2 = [];
+    let array3 = [];
 
-    this.itemRefDrink
-      .on("child_added", snapshot => {
-        if (snapshot.val().category != 'SoftDrink') {
-          array2 = []
-          array3 = []
-          for (var i in snapshot.val().ingredient) {
-            var listIngre = snapshot.val().ingredient[i]
-            for (var j in listIngre) {
-              // console.log(listIngre[j])
-              array2.push({
-                name: j,
-                quantity: listIngre[j]
-              })
-            }
+    // this.itemRefRecipes
+    //   .on("child_added", snapshot => {
+    //     if (snapshot.val().category != 'SoftDrink') {
+    //       array2 = []
+    //       array3 = []
+    //       for (var i in snapshot.val().ingredient) {
+    //         var listIngre = snapshot.val().ingredient[i]
+    //         for (var j in listIngre) {
+    //           // console.log(listIngre[j])
+    //           array2.push({
+    //             name: j,
+    //             quantity: listIngre[j]
+    //           })
+    //         }
 
+    //       }
+    //       array3.push({
+    //         name: snapshot.key,
+    //         ingredients: array2
+    //       })
+    //       this.setState({
+    //         recipe: this.state.recipe.concat(array3)
+    //       })
+    //     }
+
+    //   })
+    this.itemRefRecipes.on("value", snapshot => {
+      array3 = [];
+      snapshot.forEach(e => {
+        array2 = [];
+        var ingredient = e.val().ingredient;
+        ingredient.forEach(i => {
+          for (var key in i) {
+            array2.push({
+              name: key,
+              quantity: i[key]
+            });
           }
-          array3.push({
-            name: snapshot.key,
-            ingredients: array2
-          })
-          this.setState({
-            recipe: this.state.recipe.concat(array3)
-          })
-        }
-
-      })
-
-
+        });
+        array3.push({
+          name: e.key,
+          ingredients: array2
+        });
+      });
+      this.setState({
+        recipe: array3
+      });
+    });
   }
 
   handleSelect = event => {
@@ -97,42 +118,12 @@ class ManageItems extends Component {
   handleUploadError = error => {
     alert(error);
   };
-
-  handleUploadSuccess = filename => {
-    firebaseApp
-      .storage()
-      .ref("img")
-      .child(filename)
-      .getDownloadURL()
-      .then(url => this.setState({ imageUrl: url }));
-  };
-  uploadFile = async file => {
-    return new Promise((resolve, reject) => {
-      firebaseApp
-        .storage()
-        .ref("img")
-        .child(file.name)
-        .put(file)
-        .then(async function (result) {
-          await firebaseApp
-            .storage()
-            .ref("img")
-            .child(file.name)
-            .getDownloadURL()
-            .then(url => resolve(url));
-        });
-    });
-  };
-  handleUploadDrink = async () => {
+  handleUploadDrink = () => {
     let array = [];
-    var imgUrl = await this.uploadFile(this.state.fileImage);
     this.state.ingredient.forEach(e => {
       array.push({ [e.name]: e.quantity });
     });
-    this.itemRefDrink.child(this.state.name).set({
-      price: this.state.price,
-      category: this.state.category,
-      imageUrl: imgUrl,
+    this.itemRefRecipes.child(this.state.name).set({
       ingredient: array
     });
   };
@@ -143,7 +134,6 @@ class ManageItems extends Component {
     console.log(this.state.recipe);
     let ingredients = null;
     if (!this.state.isSoftDrink) {
-      
       ingredients = (
         <div className="form-group row">
           <label for="inputPassword" class="col-sm-2 col-form-label">
@@ -194,7 +184,7 @@ class ManageItems extends Component {
             <div class="form-group row">
               <label for="staticEmail" class="col-sm-2 col-form-label">
                 Name
-            </label>
+              </label>
               <div class="col-sm-10">
                 <input
                   onChange={e => {
@@ -205,60 +195,21 @@ class ManageItems extends Component {
                 />
               </div>
             </div>
-            <div class="form-group row">
-              <label for="inputPassword" class="col-sm-2 col-form-label">
-                Price
-            </label>
-              <div class="col-sm-10">
-                <input
-                  onChange={e => {
-                    this.setState({ price: e.target.value });
-                  }}
-                  type="text"
-                  class="form-control"
-                />
-              </div>
-            </div>
-            <div class="form-group row">
-              <label for="inputPassword" class="col-sm-2 col-form-label">
-                Image
-            </label>
-              <div class="col-sm-10">
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => this.handleChange(e.target.files)}
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="form-group row">
-              <label for="inputPassword" class="col-sm-2 col-form-label">
-                Category
-            </label>
-              <select style={{ marginLeft: 15 }} onChange={this.handleSelect}>
-                <option value="Coffee">Coffee</option>
-                <option value="Itanlian Soda">Italian Soda</option>
-                <option value="Smoothies">Smoothies</option>
-                <option value="SoftDrink">Soft Drink</option>
-              </select>
-            </div>
             {ingredients}
             <div class="button-add col-sm-12 text-center">
               <Button color="primary" onClick={this.handleUploadDrink}>
-                Add Drink
-            </Button>
+                Add Recipes
+              </Button>
             </div>
           </form>
         </div>
         <table className="table">
-          <thead >
+          <thead>
             <tr>
               <th scope="col">#</th>
               <th scope="col">Name</th>
               <th scope="col">Recipe</th>
-              <th scope="col"></th>
+              <th scope="col" />
             </tr>
           </thead>
           <tbody>
@@ -270,22 +221,21 @@ class ManageItems extends Component {
                   <td>
                     {item.ingredients.map(item => {
                       return (
-                        <p>{item.name}: {item.quantity} </p>
-                      )
+                        <p>
+                          {item.name}: {item.quantity}{" "}
+                        </p>
+                      );
                     })}
                   </td>
-                  <td>
-                    
-                  </td>
+                  <td />
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
       </div>
-
     );
   }
 }
 
-export default ManageItems;
+export default Recipes;
