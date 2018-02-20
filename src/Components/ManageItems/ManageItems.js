@@ -17,7 +17,8 @@ class ManageItems extends Component {
       inputIngredient: ["input"],
       ingredientNames: [],
       ingredient: [{ name: "", quantity: "" }],
-      drink: []
+      drink: [],
+      fileImage: ""
     };
     this.itemRef = firebaseApp.database().ref("Warehouse");
     this.itemRefDrink = firebaseApp.database().ref("Drink");
@@ -99,8 +100,14 @@ class ManageItems extends Component {
     });
   };
   handleUploadDrink = async () => {
+    if(this.state.name ==='' 
+    || this.state.price ==='' 
+    || this.state.category === 'Select' ||this.state.fileImage ===""){
+      alert('Please input the form')
+    }
     let array = [];
     var imgUrl = await this.uploadFile(this.state.fileImage);
+   
     this.itemRefDrink.child(this.state.name).set({
       price: this.state.price,
       category: this.state.category,
@@ -108,7 +115,9 @@ class ManageItems extends Component {
     });
   };
   handleChange(selectorFiles) {
-    this.state.fileImage = selectorFiles[0];
+    this.setState({
+      fileImage: selectorFiles[0]
+    })
   }
   render() {
     return (
@@ -162,6 +171,7 @@ class ManageItems extends Component {
                 Category
               </label>
               <select style={{ marginLeft: 15 }} onChange={this.handleSelect}>
+                <option value="Select">Select</option>
                 <option value="Coffee">Coffee</option>
                 <option value="Itanlian Soda">Italian Soda</option>
                 <option value="Smoothies">Smoothies</option>
