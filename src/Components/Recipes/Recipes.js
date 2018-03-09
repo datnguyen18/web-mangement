@@ -18,10 +18,12 @@ class Recipes extends Component {
       inputIngredient: ["input"],
       ingredientNames: [],
       ingredient: [{ name: "", quantity: "" }],
+      drinksNotOnRecipes: [],
       recipe: []
     };
     this.itemRef = firebaseApp.database().ref("Warehouse");
     this.itemRefRecipes = firebaseApp.database().ref("Recipes");
+    this.itemRefDrinks = firebaseApp.database().ref("Drink");
   }
 
   componentWillMount() {
@@ -85,6 +87,40 @@ class Recipes extends Component {
         recipe: array3
       });
     });
+    let drinkNames = []
+    this.itemRefDrinks.once("value", snapshot => {
+      snapshot.forEach(e => {
+        drinkNames.push(e.key)
+      })
+     
+      this.itemRefRecipes.on("value", snapshot => {
+        let drinksNotAvailableOnRecipes = []
+        drinkNames.forEach(e => {
+          if(!snapshot.hasChild(e)){
+            drinksNotAvailableOnRecipes.push(e)
+          }
+        })
+        this.setState({
+          drinksNotOnRecipes: drinksNotAvailableOnRecipes
+        })
+      })
+    })
+  }
+  handleUploadError = error => {
+    alert(error);
+  };
+  handleUploadDrink = () => {
+    let array = [];
+    this.state.ingredient.forEach(e => {
+      array.push({ [e.name]: e.quantity });
+    });
+    this.itemRefRecipes.child(this.state.name).set({
+      ingredient: array
+    });
+    
+  };
+  handleChange(selectorFiles) {
+    this.state.fileImage = selectorFiles[0];
   }
 
   handleSelect = event => {
@@ -102,6 +138,7 @@ class Recipes extends Component {
       });
     }
   };
+
   addInput = () => {
     this.setState({
       inputIngredient: this.state.inputIngredient.concat(["a"]),
@@ -115,23 +152,9 @@ class Recipes extends Component {
   handleChangeInput = (e, index) => {
     this.state.ingredient[index].quantity = e.target.value;
   };
-  handleUploadError = error => {
-    alert(error);
-  };
-  handleUploadDrink = () => {
-    let array = [];
-    this.state.ingredient.forEach(e => {
-      array.push({ [e.name]: e.quantity });
-    });
-    this.itemRefRecipes.child(this.state.name).set({
-      ingredient: array
-    });
-  };
-  handleChange(selectorFiles) {
-    this.state.fileImage = selectorFiles[0];
-  }
+
   render() {
-    console.log(this.state.recipe);
+    console.log("aaaa",this.state.drinksNotOnRecipes);
     let ingredients = null;
     if (!this.state.isSoftDrink) {
       ingredients = (
@@ -168,6 +191,7 @@ class Recipes extends Component {
                     <Button onClick={this.addInput} color="primary" id="add">
                       +
                     </Button>
+
                   </div>
                 </div>
               );
@@ -186,13 +210,18 @@ class Recipes extends Component {
                 Name
               </label>
               <div class="col-sm-10">
-                <input
+                {/* <input
                   onChange={e => {
                     this.setState({ name: e.target.value });
                   }}
                   type="text"
                   class="form-control"
-                />
+                /> */}
+                <select className="form-control" onChange={e => {this.setState({name:e.target.value})}}>
+                  {this.state.drinksNotOnRecipes.map((e,i) => {
+                    return <option value={e}>{e}</option>
+                  })}
+                </select>
               </div>
             </div>
             {ingredients}
