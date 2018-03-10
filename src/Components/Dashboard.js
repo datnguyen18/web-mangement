@@ -6,7 +6,7 @@ import {
   } from 'react-router-dom'
   
 
-import Income from './Income';
+import Income from './Income/Income';
 import ManageItems from './ManageItems/ManageItems';
 import Ingredients from './Ingredients/Ingredients';
 import SoftDrink from './SoftDrink/SoftDrink';
